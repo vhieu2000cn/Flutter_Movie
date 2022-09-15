@@ -1,0 +1,1 @@
+typedef ErrorCallBack<T> = void Function(T value);
