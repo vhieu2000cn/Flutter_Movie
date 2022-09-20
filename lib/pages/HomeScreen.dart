@@ -6,21 +6,21 @@ import 'package:movie/models/MovieResult.dart';
 import 'package:movie/repository/MovieRepository.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
+   const HomeScreen(this._navigatorKey, {Key? key}) : super(key: key);
+  final GlobalKey<NavigatorState> _navigatorKey;
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen>
     with AutomaticKeepAliveClientMixin<HomeScreen> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return Navigator(
-        key: _navigatorKey,
+        key: widget._navigatorKey,
         initialRoute: "Home",
         onGenerateRoute: generateRoute);
   }
@@ -31,20 +31,20 @@ class _HomeScreenState extends State<HomeScreen>
   Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case "Home":
-        return MaterialPageRoute(builder: (context) => const HomePage());
+        return MaterialPageRoute(builder: (_) => HomePage(widget._navigatorKey));
       case "Detail":
-        return MaterialPageRoute(
-            builder: (context) => Container(
-                color: Colors.green,
-                child: const Center(child: Text("Detail"))));
+        return MaterialPageRoute(builder: (_) => DetailPage(widget._navigatorKey));
       default:
-        return MaterialPageRoute(builder: (context) => Container());
+        return MaterialPageRoute(builder: (_) => Container());
     }
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage(this._navigatorKey, {Key? key})
+      : super(key: key);
+
+  final GlobalKey<NavigatorState> _navigatorKey;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -109,85 +109,92 @@ class _HomePageState extends State<HomePage> {
           MovieResult movieResult = _listMovieResult[index];
           return Card(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             margin: const EdgeInsets.all(10),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(movieResult.title ?? 'null',
-                      style: const TextStyle(
-                          color: Colors.black,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18)),
-                  Stack(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CachedNetworkImage(
-                            imageUrl:
-                                'https://images.tmdb.org/t/p/w92/${movieResult.backdropPath}',
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(),
+            child: InkWell(
+              onTap: () {
+                widget._navigatorKey.currentState!.pushNamed('Detail');
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(movieResult.title ?? 'null',
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    Stack(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CachedNetworkImage(
+                              imageUrl:
+                              'https://images.tmdb.org/t/p/w92/${movieResult.backdropPath}',
+                              placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                              fit: BoxFit.fill,
+                              height: 100,
+                              width: 80,
                             ),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                            fit: BoxFit.fill,
-                            height: 100,
-                            width: 80,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    'Release date: ${movieResult.releaseDate ?? 'null'}'),
-                                Text(
-                                    "Rating: ${movieResult.voteAverage ?? 'null'}/10.0"),
-                                const Text("Overview: "),
-                                Text(
-                                  movieResult.overview ?? 'null',
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      'Release date: ${movieResult.releaseDate ?? 'null'}'),
+                                  Text(
+                                      "Rating: ${movieResult.voteAverage ?? 'null'}/10.0"),
+                                  const Text("Overview: "),
+                                  Text(
+                                    movieResult.overview ?? 'null',
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          getIconAdult(movieResult.adult),
-                          InkWell(
-                            onTap: () async {
-                              if (isFavourite(movieResult.id ?? 0)) {
-                                await _movieRepository.deleteMovieFavouriteList(
-                                        movieResult.id ?? 0)
-                                    ? getMovieFavouriteList()
-                                    : null;
-                              } else {
-                                await _movieRepository.insertMovieFavouriteList(
-                                        MovieFavouriteResultItem(
-                                            movieResult: movieResult,
-                                            isFavourite: true))
-                                    ? getMovieFavouriteList()
-                                    : null;
-                              }
-                              getMovieFavouriteList();
-                            },
-                            customBorder: const CircleBorder(),
-                            child: getIconFavourite(movieResult.id ?? 0),
-                          )
-                        ],
-                      )
-                    ],
-                  )
-                ],
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            getIconAdult(movieResult.adult),
+                            InkWell(
+                              onTap: () async {
+                                if (isFavourite(movieResult.id ?? 0)) {
+                                  await _movieRepository
+                                      .deleteMovieFavouriteList(
+                                      movieResult.id ?? 0)
+                                      ? getMovieFavouriteList()
+                                      : null;
+                                } else {
+                                  await _movieRepository
+                                      .insertMovieFavouriteList(
+                                      MovieFavouriteResultItem(
+                                          movieResult: movieResult,
+                                          isFavourite: true))
+                                      ? getMovieFavouriteList()
+                                      : null;
+                                }
+                                getMovieFavouriteList();
+                              },
+                              customBorder: const CircleBorder(),
+                              child: getIconFavourite(movieResult.id ?? 0),
+                            )
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                ),
               ),
             ),
           );
@@ -253,5 +260,25 @@ class _HomePageState extends State<HomePage> {
             _lisMovieFavouriteResult.addAll(listMovie);
           })
         });
+  }
+}
+
+class DetailPage extends StatefulWidget {
+  const DetailPage(GlobalKey<NavigatorState> navigatorKey, {Key? key})
+      : super(key: key);
+
+  @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: InkWell(
+            child: const Text("Detail"),
+            onTap: () {
+              Navigator.pop(context);
+            }));
   }
 }

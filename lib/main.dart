@@ -51,7 +51,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController();
-
+  final _navigatorKey = GlobalKey<NavigatorState>();
   int currentTab = Tab.values.first.id;
   double xOffset = 0;
   double yOffset = 0;
@@ -66,39 +66,41 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        bool isPop = await _navigatorKey.currentState?.maybePop() ?? false;
         if (isDrawerOpen) {
           closeDrawer();
           return Future.value(false);
-        } else if (false) {
-          //check page
         } else {
-          final shouldPop = await showDialog<bool>(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Do you want to go back?'),
-                actionsAlignment: MainAxisAlignment.end,
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                    child: const Text(
-                      'Yes',
-                      style: TextStyle(color: Colors.grey),
+          if (!isPop) {
+            final shouldPop = await showDialog<bool>(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Do you want to go back?'),
+                  actionsAlignment: MainAxisAlignment.end,
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context, true);
+                      },
+                      child: const Text(
+                        'Yes',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, false);
-                    },
-                    child: const Text('No'),
-                  ),
-                ],
-              );
-            },
-          );
-          return shouldPop!;
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context, false);
+                      },
+                      child: const Text('No'),
+                    ),
+                  ],
+                );
+              },
+            );
+            return shouldPop!;
+          }
+          return Future.value(!isPop);
         }
       },
       child: Stack(
@@ -143,8 +145,8 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
         controller: _pageController,
-        children:  const [
-          HomeScreen(),
+        children: [
+          HomeScreen(_navigatorKey),
           FavouriteScreen(),
           SettingScreen(),
           AboutScreen(),
